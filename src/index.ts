@@ -1,5 +1,6 @@
 import TelegramBot, { Message } from "node-telegram-bot-api";
 import * as cron from "node-cron";
+import { ScheduledTask } from "node-cron";
 
 import { getPullRequests } from "./get-pull-requests";
 import { generateReport } from "./generate-report";
@@ -17,8 +18,6 @@ const loadPullRequests = async () => {
     "wonotifications",
     "wonotifications-app",
   ]);
-
-  // fs.writeFile("./report.txt", report);
 
   return generateReport(config.azureOrg, repositories);
 };
@@ -42,6 +41,8 @@ const getMessage = async (message: Message) => {
   }
 };
 
+const tasks: { [key: string]: ScheduledTask } = {};
+
 createCommands(bot, [
   {
     command: "/get",
@@ -51,12 +52,35 @@ createCommands(bot, [
     },
   },
   {
-    command: "/cron",
+    command: "/cron-start",
     description: "Start Cron",
-    callback: (message) => {
-      cron.schedule("* * */2 * * *", () => {
+    callback: async (message) => {
+      const prevTask = tasks[message.chat.id];
+
+      if (prevTask) {
+        await bot.sendMessage(message.chat.id, "Previous cron stopped");
+        prevTask.stop();
+      }
+
+      tasks[message.chat.id] = cron.schedule("0 10-18/2 * * *", () => {
         getMessage(message);
       });
+
+      await bot.sendMessage(message.chat.id, "New cron started");
+    },
+  },
+  {
+    command: "/cron-stop",
+    description: "Stop Cron",
+    callback: async (message) => {
+      const task = tasks[message.chat.id];
+
+      if (task) {
+        task.stop();
+        await bot.sendMessage(message.chat.id, "Cron stopped");
+      } else {
+        await bot.sendMessage(message.chat.id, "Cron not running");
+      }
     },
   },
 ]);
