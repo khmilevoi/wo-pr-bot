@@ -1,5 +1,4 @@
-import * as TelegramBot from "node-telegram-bot-api";
-import { Message } from "node-telegram-bot-api";
+import TelegramBot, { Message } from "node-telegram-bot-api";
 
 export type Command = {
   command: string;
@@ -12,7 +11,7 @@ export const createCommands = (bot: TelegramBot, commands: Command[]) => {
 
   bot.on("message", (message) => {
     const command = commands.find(
-      (command) => command.command === message.text
+      (command) => message.text.startsWith(command.command)
     );
 
     if (command) {

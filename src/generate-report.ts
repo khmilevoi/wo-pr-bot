@@ -25,7 +25,7 @@ const generateRepositoryReport = (
 
   return `
 -----------------------
-Repository: ${repository.name};
+Repository: *${repository.name}*;
 
 Pull Requests:
 ${pullRequestsMarkdown}
@@ -35,17 +35,22 @@ ${pullRequestsMarkdown}
 const generatePullRequestReport = (
   organization: string,
   { pullRequest, changes }: PullRequestDescriptor
-) => {
-  const markdown = `
-  Name: ${pullRequest.title};
-  Owner: ${pullRequest.createdBy.displayName};
-  Changes: ${changes.changes.filter((change) => !change.item.isFolder).length};
-  Link: https://dev.azure.com/${organization}/${
-    pullRequest.repository.project.name
-  }/_git/${pullRequest.repository.name}/pullrequest/${
+) =>
+  `
+Name: [${pullRequest.title}](${createPullRequestLink(
+    organization,
+    pullRequest.repository.project.name,
+    pullRequest.repository.name,
     pullRequest.pullRequestId
-  };
-`;
+  )});
+Owner: _${pullRequest.createdBy.displayName}_;
+Changes: ${changes.changes.filter((change) => !change.item.isFolder).length};
+`.trim();
 
-  return "  " + markdown.trim();
-};
+const createPullRequestLink = (
+  organization: string,
+  project: string,
+  repository: string,
+  pullRequestId: number
+) =>
+  `https://dev.azure.com/${organization}/${project}/_git/${repository}/pullrequest/${pullRequestId}`;

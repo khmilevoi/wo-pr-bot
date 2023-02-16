@@ -9,13 +9,14 @@ export const getPullRequests = async (
   const gitApi = await connection.getGitApi();
   const repositories = await gitApi.getRepositories();
 
-  const allowedRepositories = repositories.filter((repository) =>
-    targetRepositories.includes(repository.name)
+  const allowedRepositories = repositories.filter(
+    (repository) =>
+      repository.name && targetRepositories.includes(repository.name)
   );
 
   const requests = await Promise.all(
     allowedRepositories.map(async (repository) => {
-      const pullRequests = await gitApi.getPullRequests(repository.id, {
+      const pullRequests = await gitApi.getPullRequests(repository.id ?? "", {
         status: PullRequestStatus.Active,
       });
 
@@ -23,7 +24,7 @@ export const getPullRequests = async (
         pullRequests
           .filter((pullRequest) => !pullRequest.isDraft)
           .map(async (pullRequest) => {
-            if (pullRequest.lastMergeCommit) {
+            if (pullRequest.lastMergeCommit?.commitId && repository.id) {
               const changes = await gitApi.getChanges(
                 pullRequest.lastMergeCommit.commitId,
                 repository.id
@@ -41,10 +42,10 @@ export const getPullRequests = async (
         repository,
         pullRequestDescriptors,
       };
-    })
+    }, [])
   );
 
-  const flatted = requests.flat();
+  const flatted = requests.flat().filter((item) => !!item);
 
   return flatted.map(({ repository, pullRequestDescriptors }) => {
     return {

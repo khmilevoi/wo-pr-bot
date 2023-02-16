@@ -1,4 +1,5 @@
-import * as TelegramBot from "node-telegram-bot-api";
+import TelegramBot, { Message } from "node-telegram-bot-api";
+import * as cron from "node-cron";
 
 import { getPullRequests } from "./get-pull-requests";
 import { generateReport } from "./generate-report";
@@ -24,20 +25,38 @@ const loadPullRequests = async () => {
 
 const bot = new TelegramBot(config.telegramBotToken, { polling: true });
 
+const getMessage = async (message: Message) => {
+  try {
+    await bot.sendMessage(message.chat.id, "...Loading");
+
+    const report = await loadPullRequests();
+
+    await bot.sendMessage(
+      message.chat.id,
+      report.replaceAll(/([-.])/g, "\\$1"),
+      { parse_mode: "MarkdownV2" }
+    );
+  } catch (error) {
+    console.error(error);
+    await bot.sendMessage(message.chat.id, "error");
+  }
+};
+
 createCommands(bot, [
   {
     command: "/get",
     description: "Get Pull Requests",
     callback: async (message) => {
-      try {
-        await bot.sendMessage(message.chat.id, "...Loading");
-
-        const report = await loadPullRequests();
-
-        await bot.sendMessage(message.chat.id, report);
-      } catch (error) {
-        await bot.sendMessage(message.chat.id, "error");
-      }
+      getMessage(message);
+    },
+  },
+  {
+    command: "/cron",
+    description: "Start Cron",
+    callback: (message) => {
+      cron.schedule("* * */2 * * *", () => {
+        getMessage(message);
+      });
     },
   },
 ]);

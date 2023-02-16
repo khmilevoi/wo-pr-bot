@@ -1,11 +1,16 @@
 {
   "compilerOptions": {
-    "baseUrl": "'./src"
+    "baseUrl": "'./src",
+    "allowSyntheticDefaultImports": true,
+    "target": "esnext",
+    "lib": ["ESNext"],
+    "esModuleInterop": true,
+    "module": "commonjs"
   },
   "include": [
-    "src"
+    "./src/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules/**/*.*"
   ]
 }
