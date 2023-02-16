@@ -52,7 +52,7 @@ createCommands(bot, [
     },
   },
   {
-    command: "/cron-start",
+    command: "/cronstart",
     description: "Start Cron",
     callback: async (message) => {
       const prevTask = tasks[message.chat.id];
@@ -70,7 +70,7 @@ createCommands(bot, [
     },
   },
   {
-    command: "/cron-stop",
+    command: "/cronstop",
     description: "Stop Cron",
     callback: async (message) => {
       const task = tasks[message.chat.id];
