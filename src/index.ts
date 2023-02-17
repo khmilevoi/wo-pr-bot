@@ -11,13 +11,7 @@ import { createCommands } from "./create-commands";
 const api = createAzureConnection();
 
 const loadPullRequests = async () => {
-  const repositories = await getPullRequests(api, [
-    "wofusion-ui",
-    "wofusion-ui-sharedlib",
-    "wofusion-admin-ui",
-    "wonotifications",
-    "wonotifications-app",
-  ]);
+  const repositories = await getPullRequests(api, config.repositories);
 
   return generateReport(config.azureOrg, repositories);
 };
