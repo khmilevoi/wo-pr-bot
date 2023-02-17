@@ -1,5 +1,5 @@
 import * as azureDevOps from "azure-devops-node-api";
-import { CachedConnection } from "./cached-connection";
+import { CachedConnectionStorage } from "./storages";
 import { config } from "./config";
 
 export const createAzureConnection = (token?: string) => {
@@ -9,7 +9,7 @@ export const createAzureConnection = (token?: string) => {
   const api = new azureDevOps.WebApi(config.azureOriginURL, authHandler);
 
   if (config.isDevelopment) {
-    return new CachedConnection({
+    return new CachedConnectionStorage({
       api,
       configJSONPath: "./cache.json",
     });

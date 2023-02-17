@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "baseUrl": "'./src",
     "allowSyntheticDefaultImports": true,
     "target": "esnext",
     "lib": [

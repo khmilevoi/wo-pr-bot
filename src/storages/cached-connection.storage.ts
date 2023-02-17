@@ -87,4 +87,4 @@ interface CachedConnectionMock {
   new (config: TestConnectionConfig): WebApi;
 }
 
-export const CachedConnection = Connection as unknown as CachedConnectionMock;
+export const CachedConnectionStorage = Connection as unknown as CachedConnectionMock;

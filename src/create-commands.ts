@@ -1,12 +1,12 @@
 import TelegramBot, { Message } from "node-telegram-bot-api";
 
-export type Command = {
+export type ICommand = {
   command: string;
   description: string;
   callback: (message: Message) => void;
 };
 
-export const createCommands = (bot: TelegramBot, commands: Command[]) => {
+export const createCommands = (bot: TelegramBot, commands: ICommand[]) => {
   bot.setMyCommands(commands);
 
   bot.on("message", (message) => {
