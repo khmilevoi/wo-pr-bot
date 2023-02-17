@@ -13,11 +13,15 @@ const generateRepositoryReport = (
   organization: string,
   { repository, pullRequestDescriptors }: GitDescriptor
 ) => {
-  if (pullRequestDescriptors.length === 0) {
+  const filteredPullRequests = pullRequestDescriptors.filter(
+    (pr) => !pr.isMine && !pr.isReviewed && !pr.isCanBeMerged
+  );
+
+  if (filteredPullRequests.length === 0) {
     return "";
   }
 
-  const pullRequestsMarkdown = pullRequestDescriptors
+  const pullRequestsMarkdown = filteredPullRequests
     .map((pullRequestInfo) =>
       generatePullRequestReport(organization, pullRequestInfo)
     )

@@ -3,3 +3,4 @@ node_modules
 report.txt
 cache.json
 dist
+users.json

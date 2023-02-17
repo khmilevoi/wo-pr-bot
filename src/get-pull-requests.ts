@@ -2,12 +2,23 @@ import { WebApi } from "azure-devops-node-api";
 import { PullRequestStatus } from "azure-devops-node-api/interfaces/GitInterfaces";
 import { GitDescriptor } from "./types";
 
+export type IGetPullRequestsFlags = {
+  isAll: boolean;
+};
+
+export type IGetPullRequestsConfig = {
+  userEmail?: string;
+} & IGetPullRequestsFlags;
+
 export const getPullRequests = async (
   connection: WebApi,
-  targetRepositories: string[]
+  targetRepositories: string[],
+  config: IGetPullRequestsConfig
 ): Promise<GitDescriptor[]> => {
   const gitApi = await connection.getGitApi();
   const repositories = await gitApi.getRepositories();
+
+  const userEmail = getUserEmail(config);
 
   const allowedRepositories = repositories.filter(
     (repository) =>
@@ -31,6 +42,18 @@ export const getPullRequests = async (
               );
 
               return {
+                isMine:
+                  pullRequest.createdBy.uniqueName.toLowerCase() ===
+                  userEmail?.toLowerCase(),
+                isCanBeMerged:
+                  pullRequest.reviewers.filter(
+                    (reviewer) => reviewer.vote === 10
+                  ).length >= 2,
+                isReviewed: !!pullRequest.reviewers.find(
+                  (reviewer) =>
+                    reviewer.uniqueName.toLowerCase() ===
+                      userEmail?.toLowerCase() && reviewer.vote === 10
+                ),
                 changes,
                 pullRequest,
               };
@@ -45,7 +68,7 @@ export const getPullRequests = async (
     }, [])
   );
 
-  const flatted = requests.flat().filter((item) => !!item);
+  const flatted = requests.flat();
 
   return flatted.map(({ repository, pullRequestDescriptors }) => {
     return {
@@ -53,4 +76,12 @@ export const getPullRequests = async (
       pullRequestDescriptors: pullRequestDescriptors,
     };
   });
+};
+
+const getUserEmail = ({ userEmail, isAll }: IGetPullRequestsConfig) => {
+  if (isAll) {
+    return null;
+  }
+
+  return userEmail ?? null;
 };
