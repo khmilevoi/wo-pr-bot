@@ -2,6 +2,7 @@ import { Storage } from "./storage";
 
 export type User = {
   email: string;
+  token?: string;
 };
 
 type UserStorageData = {
@@ -18,6 +19,14 @@ export class UserStorage {
     const data = this.storage.getData();
 
     data[chatId] = user;
+
+    this.storage.update();
+  }
+
+  removeUser(chatId: number) {
+    const data = this.storage.getData();
+
+    delete data[chatId];
 
     this.storage.update();
   }

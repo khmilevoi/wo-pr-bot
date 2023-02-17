@@ -6,7 +6,7 @@ export interface StorageConfig<Data> {
 }
 
 export class Storage<Data> {
-  private data: Data;
+  private data!: Data;
 
   constructor(private readonly config: StorageConfig<Data>) {
     this.load();
@@ -20,7 +20,9 @@ export class Storage<Data> {
     const file = fs.readFileSync(this.config.path).toString();
 
     if (file.trim() === "") {
-      this.data = this.config.initialData;
+      if (this.config.initialData) {
+        this.data = this.config.initialData;
+      }
     } else {
       try {
         this.data = JSON.parse(file);

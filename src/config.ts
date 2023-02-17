@@ -7,10 +7,10 @@ dotenv.config({
 const azureOrg = process.env.AZURE_DEVOPS_ORG;
 
 export const config = {
-  azureToken: process.env.AZURE_DEVOPS_EXT_PAT,
-  azureOrg: azureOrg,
+  azureToken: process.env.AZURE_DEVOPS_EXT_PAT ?? '',
+  azureOrg: azureOrg ?? '',
   azureOriginURL: `https://dev.azure.com/${azureOrg}`,
-  repositories: JSON.parse(process.env.REPOSITORIES),
-  telegramBotToken: process.env.BOT_TOKEN,
+  repositories: JSON.parse(process.env.REPOSITORIES ?? '[]'),
+  telegramBotToken: process.env.BOT_TOKEN ?? '',
   isDevelopment: process.env.NODE_ENV === "development",
 };

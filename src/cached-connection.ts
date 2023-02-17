@@ -37,7 +37,7 @@ class Connection {
     methodName: keyof IGitApi,
     cacheKey: Key
   ) {
-    return async (...args: any[]) => {
+    return async (...args: unknown[]) => {
       const cache = this.cache.getData();
       const key = JSON.stringify(args);
 
@@ -47,15 +47,20 @@ class Connection {
         if (typeof method === "function") {
           cache[cacheKey] = cache[cacheKey] ?? {};
 
+          const cacheGroup = cache[cacheKey];
+
           console.log(`[API CALL]: ${methodName}(${args.join(", ")})`);
 
-          cache[cacheKey][key] = await method.bind(api)(...args);
+          if (cacheGroup?.[key] != null) {
+            // @ts-ignore
+            cacheGroup[key] = await method.bind(api)(...args);
+          }
 
           this.cache.update();
         }
       }
 
-      return cache[cacheKey][key] as Cache[Key][keyof Cache[Key]];
+      return cache[cacheKey]?.[key] as Cache[Key][keyof Cache[Key]];
     };
   }
 

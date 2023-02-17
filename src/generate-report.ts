@@ -13,15 +13,11 @@ const generateRepositoryReport = (
   organization: string,
   { repository, pullRequestDescriptors }: GitDescriptor
 ) => {
-  const filteredPullRequests = pullRequestDescriptors.filter(
-    (pr) => !pr.isMine && !pr.isReviewed && !pr.isCanBeMerged
-  );
-
-  if (filteredPullRequests.length === 0) {
+  if (pullRequestDescriptors.length === 0) {
     return "";
   }
 
-  const pullRequestsMarkdown = filteredPullRequests
+  const pullRequestsMarkdown = pullRequestDescriptors
     .map((pullRequestInfo) =>
       generatePullRequestReport(organization, pullRequestInfo)
     )
@@ -43,18 +39,18 @@ const generatePullRequestReport = (
   `
 Name: [${pullRequest.title}](${createPullRequestLink(
     organization,
-    pullRequest.repository.project.name,
-    pullRequest.repository.name,
+    pullRequest?.repository?.project?.name,
+    pullRequest?.repository?.name,
     pullRequest.pullRequestId
   )});
-Owner: _${pullRequest.createdBy.displayName}_;
-Changes: ${changes.changes.filter((change) => !change.item.isFolder).length};
+Owner: _${pullRequest.createdBy?.displayName}_;
+Changes: ${changes.changes?.filter((change) => !change.item?.isFolder).length};
 `.trim();
 
 const createPullRequestLink = (
   organization: string,
-  project: string,
-  repository: string,
-  pullRequestId: number
+  project?: string,
+  repository?: string,
+  pullRequestId?: number
 ) =>
   `https://dev.azure.com/${organization}/${project}/_git/${repository}/pullrequest/${pullRequestId}`;

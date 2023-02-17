@@ -10,9 +10,6 @@ export type GitDescriptor = {
 };
 
 export type PullRequestDescriptor = {
-  isMine: boolean;
-  isReviewed: boolean;
-  isCanBeMerged: boolean;
   pullRequest: GitPullRequest;
   changes: GitCommitChanges;
 };

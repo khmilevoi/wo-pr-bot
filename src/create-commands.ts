@@ -11,7 +11,7 @@ export const createCommands = (bot: TelegramBot, commands: Command[]) => {
 
   bot.on("message", (message) => {
     const command = commands.find(
-      (command) => message.text.startsWith(command.command)
+      (command) => message.text?.startsWith(command.command)
     );
 
     if (command) {

@@ -13,9 +13,11 @@ import { config } from "./config";
 import { createCommands } from "./create-commands";
 import { UserStorage } from "./user-storage";
 
-const api = createAzureConnection();
+const userStorage = new UserStorage();
 
 const loadPullRequests = async (pullRequestsConfig: IGetPullRequestsConfig) => {
+  const api = createAzureConnection(pullRequestsConfig.userToken);
+
   const repositories = await getPullRequests(
     api,
     config.repositories,
@@ -24,8 +26,6 @@ const loadPullRequests = async (pullRequestsConfig: IGetPullRequestsConfig) => {
 
   return generateReport(config.azureOrg, repositories);
 };
-
-const userStorage = new UserStorage();
 
 const bot = new TelegramBot(config.telegramBotToken, { polling: true });
 
@@ -38,6 +38,7 @@ const getMessage = async (message: Message, flags: IGetPullRequestsFlags) => {
     const report = await loadPullRequests({
       ...flags,
       userEmail: currentUser?.email,
+      userToken: currentUser?.token,
     });
 
     await bot.sendMessage(
@@ -47,7 +48,13 @@ const getMessage = async (message: Message, flags: IGetPullRequestsFlags) => {
     );
   } catch (error) {
     console.error(error);
-    await bot.sendMessage(message.chat.id, "error");
+
+    if (typeof error === "object" && error && "message" in error) {
+      await bot.sendMessage(message.chat.id, `${error?.message}`);
+      return;
+    }
+
+    await bot.sendMessage(message.chat.id, `${error}` || "error");
   }
 };
 
@@ -56,9 +63,10 @@ const tasks: { [key: string]: ScheduledTask } = {};
 createCommands(bot, [
   {
     command: "/get",
-    description: "Command to retrieve pull requests with an optional --all flag.",
+    description:
+      "Command to retrieve pull requests with an optional --all flag.",
     callback: async (message) => {
-      const flags = message.text.replace("/get", "").trim().split(/\s+/);
+      const flags = message.text?.replace("/get", "").trim().split(/\s+/) ?? [];
 
       const config = flags.reduce<IGetPullRequestsFlags>(
         (result, flag) => {
@@ -79,9 +87,10 @@ createCommands(bot, [
   },
   {
     command: "/cronstart",
-    description: "Command to start a new cron job with an optional custom cron string.",
+    description:
+      "Command to start a new cron job with an optional custom cron string.",
     callback: async (message) => {
-      const customCron = message.text.replace("/cronstart", "").trim();
+      const customCron = message.text?.replace("/cronstart", "").trim();
 
       const prevTask = tasks[message.chat.id];
 
@@ -90,8 +99,7 @@ createCommands(bot, [
         prevTask.stop();
       }
 
-      const cronString =
-        customCron.length === 0 ? "0 10-18/2 * * *" : customCron;
+      const cronString = customCron ? customCron : "0 10-18/2 * * *";
 
       tasks[message.chat.id] = cron.schedule(cronString, () => {
         getMessage(message, { isAll: true });
@@ -118,7 +126,7 @@ createCommands(bot, [
     command: "/login",
     description: "Command to set the email of the user for the chat.",
     callback: async (message) => {
-      const email = message.text.replace("/login", "").trim();
+      const email = message.text?.replace("/login", "").trim() ?? "";
 
       if (!/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
         await bot.sendMessage(message.chat.id, "Invalid email");
@@ -131,6 +139,65 @@ createCommands(bot, [
       });
 
       await bot.sendMessage(message.chat.id, "User saved");
+    },
+  },
+  {
+    command: "/logout",
+    description: "Command to remove current user.",
+    callback: async (message) => {
+      userStorage.removeUser(message.chat.id);
+
+      await bot.sendMessage(message.chat.id, "User removed");
+    },
+  },
+  {
+    command: "/settoken",
+    description:
+      "Command to set the personal access token of the user for the chat.",
+    callback: async (message) => {
+      const token = message.text?.replace("/settoken", "").trim();
+
+      const user = userStorage.getUser(message.chat.id);
+
+      if (user == null) {
+        await bot.sendMessage(message.chat.id, "You must be logged in");
+
+        return;
+      }
+
+      if (token === "") {
+        await bot.sendMessage(message.chat.id, "Invalid token");
+
+        return;
+      }
+
+      userStorage.updateUser(message.chat.id, {
+        ...user,
+        token,
+      });
+
+      await bot.sendMessage(message.chat.id, "Token saved");
+    },
+  },
+  {
+    command: "/deltoken",
+    description:
+      "Command to delete the personal access token of the user for the chat.",
+    callback: async (message) => {
+      const user = userStorage.getUser(message.chat.id);
+
+      if (user == null) {
+        await bot.sendMessage(message.chat.id, "You must be logged in");
+
+        return;
+      }
+
+      userStorage.updateUser(message.chat.id, {
+        ...user,
+        token: undefined,
+      });
+
+      await bot.sendMessage(message.chat.id, "Token removed");
     },
   },
   {
