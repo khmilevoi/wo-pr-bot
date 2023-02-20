@@ -40,7 +40,7 @@ export const loadPullRequestsCommand = async (
 
     await bot.sendMessage(
       message.chat.id,
-      report.replaceAll(/([-.])/g, "\\$1"),
+      report.replaceAll(/([-.()])/g, "\\$1"),
       { parse_mode: "MarkdownV2" }
     );
   } catch (error) {
