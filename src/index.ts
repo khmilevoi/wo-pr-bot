@@ -5,6 +5,7 @@ import {
   createCronStartCommand,
   createCronStopCommand,
   createDelTokenCommand,
+  createGetAllCommand,
   createGetCommand,
   createLoginCommand,
   createLogoutCommand,
@@ -15,6 +16,7 @@ import {
 const bot = new TelegramBot(config.telegramBotToken, { polling: true });
 
 createCommands(bot, [
+  createGetAllCommand(bot),
   createGetCommand(bot),
   createCronStartCommand(bot),
   createCronStopCommand(bot),

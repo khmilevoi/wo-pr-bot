@@ -38,11 +38,9 @@ export const loadPullRequestsCommand = async (
       userToken: currentUser?.token,
     });
 
-    await bot.sendMessage(
-      message.chat.id,
-      report.replaceAll(/([-.()])/g, "\\$1"),
-      { parse_mode: "MarkdownV2" }
-    );
+    await bot.sendMessage(message.chat.id, report, {
+      parse_mode: "HTML",
+    });
   } catch (error) {
     console.error(error);
 

@@ -41,20 +41,17 @@ class Connection {
       const cache = this.cache.getData();
       const key = JSON.stringify(args);
 
-      if (cache[cacheKey]?.[key] == null) {
+      cache[cacheKey] = cache[cacheKey] ?? {};
+      const cacheGroup = cache[cacheKey];
+
+      if (cacheGroup?.[key] == null) {
         const method = api[methodName];
 
         if (typeof method === "function") {
-          cache[cacheKey] = cache[cacheKey] ?? {};
-
-          const cacheGroup = cache[cacheKey];
-
           console.log(`[API CALL]: ${methodName}(${args.join(", ")})`);
 
-          if (cacheGroup?.[key] != null) {
-            // @ts-ignore
-            cacheGroup[key] = await method.bind(api)(...args);
-          }
+          // @ts-ignore
+          cacheGroup[key] = await method.bind(api)(...args);
 
           this.cache.update();
         }
@@ -87,4 +84,5 @@ interface CachedConnectionMock {
   new (config: TestConnectionConfig): WebApi;
 }
 
-export const CachedConnectionStorage = Connection as unknown as CachedConnectionMock;
+export const CachedConnectionStorage =
+  Connection as unknown as CachedConnectionMock;
