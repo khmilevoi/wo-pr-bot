@@ -10,5 +10,6 @@ export type GitDescriptor = {
 };
 
 export type PullRequestDescriptor = {
-  pullRequest: GitPullRequest; changes: GitCommitChanges
-}
+  pullRequest: GitPullRequest;
+  changes: GitCommitChanges;
+};

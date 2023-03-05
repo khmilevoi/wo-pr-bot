@@ -25,7 +25,7 @@ const generateRepositoryReport = (
 
   return `
 -----------------------
-Repository: *${repository.name}*;
+Repository: ${createBold(repository.name)};
 
 Pull Requests:
 ${pullRequestsMarkdown}
@@ -37,20 +37,35 @@ const generatePullRequestReport = (
   { pullRequest, changes }: PullRequestDescriptor
 ) =>
   `
-Name: [${pullRequest.title}](${createPullRequestLink(
-    organization,
-    pullRequest.repository.project.name,
-    pullRequest.repository.name,
-    pullRequest.pullRequestId
-  )});
-Owner: _${pullRequest.createdBy.displayName}_;
-Changes: ${changes.changes.filter((change) => !change.item.isFolder).length};
+Name: ${createLink(
+    pullRequest.title,
+    createPullRequestLink(
+      organization,
+      pullRequest?.repository?.project?.name,
+      pullRequest?.repository?.name,
+      pullRequest.pullRequestId
+    )
+  )};
+Owner: ${createItalic(pullRequest.createdBy?.displayName)};
+Changes: ${changes.changes?.filter((change) => !change.item?.isFolder).length};
 `.trim();
+
+const createLink = (title: string = "", link: string = "") => {
+  return `<a href="${link}">${title}</a>`;
+};
+
+const createItalic = (text?: string) => {
+  return `<i>${text}</i>`;
+};
+
+const createBold = (text?: string) => {
+  return `<b>${text}</b>`;
+};
 
 const createPullRequestLink = (
   organization: string,
-  project: string,
-  repository: string,
-  pullRequestId: number
+  project?: string,
+  repository?: string,
+  pullRequestId?: number
 ) =>
   `https://dev.azure.com/${organization}/${project}/_git/${repository}/pullrequest/${pullRequestId}`;

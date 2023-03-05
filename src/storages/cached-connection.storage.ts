@@ -1,11 +1,11 @@
 import { WebApi } from "azure-devops-node-api";
-import * as fs from "fs";
 import {
   GitCommitChanges,
   GitPullRequest,
   GitRepository,
 } from "azure-devops-node-api/interfaces/GitInterfaces";
 import { GitApi, IGitApi } from "azure-devops-node-api/GitApi";
+import { Storage } from "./storage";
 
 type TestConnectionConfig = {
   api: WebApi;
@@ -23,24 +23,13 @@ type Cache = {
 };
 
 class Connection {
-  private cache: Cache = {};
+  private cache: Storage<Cache>;
 
   constructor(private readonly config: TestConnectionConfig) {
-    this.readCache();
-  }
-
-  private readCache() {
-    if (!fs.existsSync(this.config.configJSONPath)) {
-      fs.writeFileSync(this.config.configJSONPath, "{}");
-    }
-
-    this.cache = JSON.parse(
-      fs.readFileSync(this.config.configJSONPath).toString()
-    );
-  }
-
-  updateCache() {
-    fs.writeFileSync(this.config.configJSONPath, JSON.stringify(this.cache));
+    this.cache = new Storage<Cache>({
+      path: config.configJSONPath,
+      initialData: {},
+    });
   }
 
   private createHandler<Key extends keyof Cache>(
@@ -48,24 +37,27 @@ class Connection {
     methodName: keyof IGitApi,
     cacheKey: Key
   ) {
-    return async (...args: any[]) => {
+    return async (...args: unknown[]) => {
+      const cache = this.cache.getData();
       const key = JSON.stringify(args);
 
-      if (this.cache[cacheKey]?.[key] == null) {
+      cache[cacheKey] = cache[cacheKey] ?? {};
+      const cacheGroup = cache[cacheKey];
+
+      if (cacheGroup?.[key] == null) {
         const method = api[methodName];
 
         if (typeof method === "function") {
-          this.cache[cacheKey] = this.cache[cacheKey] ?? {};
-
           console.log(`[API CALL]: ${methodName}(${args.join(", ")})`);
 
-          this.cache[cacheKey][key] = await method.bind(api)(...args);
+          // @ts-ignore
+          cacheGroup[key] = await method.bind(api)(...args);
 
-          this.updateCache();
+          this.cache.update();
         }
       }
 
-      return this.cache[cacheKey][key] as Cache[Key][keyof Cache[Key]];
+      return cache[cacheKey]?.[key] as Cache[Key][keyof Cache[Key]];
     };
   }
 
@@ -89,7 +81,8 @@ class Connection {
 }
 
 interface CachedConnectionMock {
-  new (config: TestConnectionConfig): Omit<Connection, keyof WebApi> & WebApi;
+  new (config: TestConnectionConfig): WebApi;
 }
 
-export const CachedConnection = Connection as unknown as CachedConnectionMock;
+export const CachedConnectionStorage =
+  Connection as unknown as CachedConnectionMock;

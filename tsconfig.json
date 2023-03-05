@@ -1,16 +1,20 @@
 {
   "compilerOptions": {
-    "baseUrl": "'./src",
     "allowSyntheticDefaultImports": true,
     "target": "esnext",
-    "lib": ["ESNext"],
+    "lib": [
+      "ESNext"
+    ],
+    "strict": true,
+    "strictNullChecks": true,
     "esModuleInterop": true,
-    "module": "commonjs"
+    "module": "commonjs",
+    "skipLibCheck": true
   },
   "include": [
     "./src/**/*.ts"
   ],
   "exclude": [
-    "node_modules/**/*.*"
+    "node_modules"
   ]
 }
